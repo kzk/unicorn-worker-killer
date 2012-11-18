@@ -80,7 +80,8 @@ module UnicornWorkerKiller
       # It would be ideal for not forking the process to get RSS. For Linux,
       # this module reads '/proc/<pid>/status' to get RSS, but not for other
       # environments (e.g. MacOS and Windows).
-      return `ps -o rss= -p #{Process.pid}`.to_i
+      kb = `ps -o rss= -p #{Process.pid}`.to_i
+      return kb * 1024
     end
   end
 
