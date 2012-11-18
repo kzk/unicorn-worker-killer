@@ -1,4 +1,8 @@
-Release 0.1 - 2012/11/17
+Release 0.1.2 - 2012/11/17
+
+  * Change unicorn version dependency to '~> 4'
+
+Release 0.1.1 - 2012/11/17
 
   * Fix homepage
 
