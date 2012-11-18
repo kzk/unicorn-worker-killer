@@ -8,7 +8,7 @@ Killing Unicorn worker based on 1) Max number of requests and 2) Process memory 
 
 # Usage
 
-add these lines to your config.ru.
+Add these lines to your `config.ru`. It's highly recommended to randomize these numbers, to avoid killing all workers at once.
 
     # Unicorn self-process killer
     require 'unicorn/worker_killer'
