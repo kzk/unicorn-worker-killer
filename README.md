@@ -18,20 +18,20 @@ Add these lines to your `config.ru`.
     require 'unicorn/worker_killer'
     
     # Max requests per worker
-    use UnicornWorkerKiller::MaxRequests, 10240 + Random.rand(10240)
+    use Unicorn::WorkerKiller::MaxRequests, 10240 + Random.rand(10240)
     
     # Max memory size (RSS) per worker
-    use UnicornWorkerKiller::Oom, (96 + Random.rand(32)) * 1024**2
+    use Unicorn::WorkerKiller::Oom, (96 + Random.rand(32)) * 1024**2
 
 This gem provides two modules.
 
-### UnicornWorkerKiller::MaxRequests(max_requests = 1024)
+### Unicorn::WorkerKiller::MaxRequests(max_requests = 1024)
 
 This module automatically restarts the Unicorn workers, based on the number of requests which worker processed.
 
 `max_requests` specifies the maximum number of requests which this worker should process. Once the number exceeds `max_requests`, that worker is automatically restarted. It's highly recommended to randomize this number to avoid restarting all workers at once.
 
-### UnicornWorkerKiller::Oom(memory_size = (1024**3), check_cycle = 16)
+### Unicorn::WorkerKiller::Oom(memory_size = (1024**3), check_cycle = 16)
 
 This module automatically restarts the Unicorn workers, based on its memory size.
 

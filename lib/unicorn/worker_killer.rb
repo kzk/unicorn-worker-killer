@@ -1,4 +1,4 @@
-module UnicornWorkerKiller
+module Unicorn::WorkerKiller
   # Self-destruction by sending the signals to myself. The process sometimes
   # doesn't terminate by SIGTERM, so this tries to send SIGQUIT and SIGKILL
   # if it doesn't finish immediately.
