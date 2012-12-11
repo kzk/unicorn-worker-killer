@@ -46,7 +46,7 @@ module Unicorn::WorkerKiller
       if c % @_worker_check_cycle == 0
         @_worker_check_count = 0
         if _worker_rss() > @_worker_memory_size
-          UnicornWorkerKiller.kill_self(logger, @_worker_process_start)
+          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
         end
       else
         @_worker_check_count = c
@@ -104,7 +104,7 @@ module Unicorn::WorkerKiller
       super(client) # Unicorn::HttpServer#process_client
 
       if (@_worker_max_requests -= 1) <= 0
-        UnicornWorkerKiller.kill_self(logger, @_worker_process_start)
+        Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
       end
     end
   end
