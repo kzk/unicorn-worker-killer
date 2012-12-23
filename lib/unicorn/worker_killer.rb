@@ -42,14 +42,14 @@ module Unicorn::WorkerKiller
       @_worker_process_start ||= Time.now
       super(client) # Unicorn::HttpServer#process_client
 
-      c = @_worker_check_count + 1
+      @_worker_check_count += 1
       if c % @_worker_check_cycle == 0
-        @_worker_check_count = 0
-        if _worker_rss() > @_worker_memory_size
+        rss = _worker_rss()
+        if rss > @_worker_memory_size
+          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_size} bytes)"
           Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
         end
-      else
-        @_worker_check_count = c
+        @_worker_check_count = 0
       end
     end
 
@@ -95,6 +95,7 @@ module Unicorn::WorkerKiller
       ObjectSpace.each_object(Unicorn::HttpServer) do |s|
         s.extend(self)
         s.instance_variable_set(:@_worker_max_requests, max_requests)
+        s.instance_variable_set(:@_worker_cur_requests, max_requests)
       end
       app # pretend to be Rack middleware since it was in the past
     end
@@ -103,7 +104,8 @@ module Unicorn::WorkerKiller
       @_worker_process_start ||= Time.now
       super(client) # Unicorn::HttpServer#process_client
 
-      if (@_worker_max_requests -= 1) <= 0
+      if (@_worker_cur_requests -= 1) <= 0
+        logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
         Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
       end
     end
