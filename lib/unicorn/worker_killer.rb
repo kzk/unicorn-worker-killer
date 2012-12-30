@@ -15,7 +15,7 @@ module Unicorn::WorkerKiller
         sig = :KILL
       end
 
-      logger.warn "#{self} send SIGTERM (pid: #{Process.pid})\talive: #{alive_sec} sec (trial #{i})"
+      logger.warn "#{self} send SIGTERM (pid: #{Process.pid}) alive: #{alive_sec} sec (trial #{i})"
       Process.kill sig, Process.pid
 
       sleep 1  # TODO configurable sleep
@@ -43,7 +43,7 @@ module Unicorn::WorkerKiller
       super(client) # Unicorn::HttpServer#process_client
 
       @_worker_check_count += 1
-      if c % @_worker_check_cycle == 0
+      if @_worker_check_count % @_worker_check_cycle == 0
         rss = _worker_rss()
         if rss > @_worker_memory_size
           logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_size} bytes)"
