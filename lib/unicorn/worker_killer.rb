@@ -28,10 +28,11 @@ module Unicorn::WorkerKiller
     # affect the request.
     #
     # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
-    def self.new(app, memory_size = (1024**3), check_cycle = 16)
+    def self.new(app, memory_limit_min = (1024**3), memory_limit_max = (2*(1024**3)), check_cycle = 16)
       ObjectSpace.each_object(Unicorn::HttpServer) do |s|
         s.extend(self)
-        s.instance_variable_set(:@_worker_memory_size, memory_size)
+        s.instance_variable_set(:@_worker_memory_limit_min, memory_limit_min)
+        s.instance_variable_set(:@_worker_memory_limit_max, memory_limit_max)
         s.instance_variable_set(:@_worker_check_cycle, check_cycle)
         s.instance_variable_set(:@_worker_check_count, 0)
       end
@@ -40,13 +41,14 @@ module Unicorn::WorkerKiller
 
     def process_client(client)
       @_worker_process_start ||= Time.now
+      @_worker_memory_limit ||= Random.rand(@_worker_memory_limit_min..@_worker_memory_limit_max)
       super(client) # Unicorn::HttpServer#process_client
 
       @_worker_check_count += 1
       if @_worker_check_count % @_worker_check_cycle == 0
         rss = _worker_rss()
-        if rss > @_worker_memory_size
-          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_size} bytes)"
+        if rss > @_worker_memory_limit
+          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
           Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
         end
         @_worker_check_count = 0
@@ -91,17 +93,19 @@ module Unicorn::WorkerKiller
     # affect the request.
     #
     # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
-    def self.new(app, max_requests = 1024)
+    def self.new(app, max_requests_min = 3072, max_requests_max = 4096)
       ObjectSpace.each_object(Unicorn::HttpServer) do |s|
         s.extend(self)
-        s.instance_variable_set(:@_worker_max_requests, max_requests)
-        s.instance_variable_set(:@_worker_cur_requests, max_requests)
+        s.instance_variable_set(:@_worker_max_requests_min, max_requests_min)
+        s.instance_variable_set(:@_worker_max_requests_max, max_requests_max)
       end
       app # pretend to be Rack middleware since it was in the past
     end
 
     def process_client(client)
       @_worker_process_start ||= Time.now
+      @_worker_cur_requests ||= Random.rand(@_worker_max_requests_min..@_worker_max_requests_max)
+      @_worker_max_requests ||= @_worker_cur_requests
       super(client) # Unicorn::HttpServer#process_client
 
       if (@_worker_cur_requests -= 1) <= 0

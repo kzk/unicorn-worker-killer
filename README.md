@@ -25,17 +25,17 @@ Add these lines to your `config.ru`.
 
 This gem provides two modules.
 
-### Unicorn::WorkerKiller::MaxRequests(max_requests = 1024)
+### Unicorn::WorkerKiller::MaxRequests(max_requests_min=3072, max_requests_max=4096)
 
 This module automatically restarts the Unicorn workers, based on the number of requests which worker processed.
 
-`max_requests` specifies the maximum number of requests which this worker should process. Once the number exceeds `max_requests`, that worker is automatically restarted. It's highly recommended to randomize this number to avoid restarting all workers at once.
+`max_requests_min` and `max_requests_max` specify the min and max of maximum requests per worker. The actual limit is decided by rand() between `max_requests_min` and `max_requests_max` per worker, to prevent all workers to be dead at the same time. Once the number exceeds the limit, that worker is automatically restarted.
 
-### Unicorn::WorkerKiller::Oom(memory_size = (1024**3), check_cycle = 16)
+### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024**3), memory_limit_max=(2*(1024**3)), check_cycle = 16)
 
 This module automatically restarts the Unicorn workers, based on its memory size.
 
-`memory_size` specifies the maximum memory which this worker can have. Once the memory size exceeds `memory_size`, that worker is automatically restarted. It's highly recommended to randomize this number to avoid restarting all workers at once.
+`memory_limit_min` and `memory_limit_max` specify the min and max of maximum memory per worker. The actual limit is decided by rand() between `memory_limit_min` and `memory_limit_max` per worker, to prevent all workers to be dead at the same time.  Once the memory size exceeds `memory_size`, that worker is automatically restarted.
 
 The memory size check is done in every `check_cycle` requests.
 
