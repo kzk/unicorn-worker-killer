@@ -1,19 +1,20 @@
-Release 0.2.1 - 2012/12/10
+Release 0.3.1 - 2013/01/13
+  * fix for ruby 1.9.2
 
-  * fixed critical namespace error, introduced at the previous version
+Release 0.3.0 - 2012/12/31
+  * fix for 'preload_app true'
+
+Release 0.2.1 - 2012/12/10
+  * fix critical namespace error, introduced at the previous version
 
 Release 0.2.0 - 2012/11/22
-
-  * Change namespace to Unicorn::WorkerKiller from UnicornWorkerKiller
+  * change namespace to Unicorn::WorkerKiller from UnicornWorkerKiller
 
 Release 0.1.2 - 2012/11/17
-
-  * Change unicorn version dependency to '~> 4'
+  * change unicorn version dependency to '~> 4'
 
 Release 0.1.1 - 2012/11/17
-
-  * Fix homepage
+  * fix homepage
 
 Release 0.1 - 2012/11/17
-
-  * First release
+  * first release
