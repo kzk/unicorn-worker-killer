@@ -41,7 +41,7 @@ module Unicorn::WorkerKiller
 
     def process_client(client)
       @_worker_process_start ||= Time.now
-      @_worker_memory_limit ||= Random.rand(@_worker_memory_limit_min..@_worker_memory_limit_max)
+      @_worker_memory_limit ||= @_worker_memory_limit_min + Random.rand(@_worker_memory_limit_max-@_worker_memory_limit_min+1)
       super(client) # Unicorn::HttpServer#process_client
 
       @_worker_check_count += 1
@@ -104,7 +104,7 @@ module Unicorn::WorkerKiller
 
     def process_client(client)
       @_worker_process_start ||= Time.now
-      @_worker_cur_requests ||= Random.rand(@_worker_max_requests_min..@_worker_max_requests_max)
+      @_worker_cur_requests ||= @_worker_max_requests_min + Random.rand(@_worker_max_requests_max-@_worker_max_requests_min+1)
       @_worker_max_requests ||= @_worker_cur_requests
       super(client) # Unicorn::HttpServer#process_client
 
