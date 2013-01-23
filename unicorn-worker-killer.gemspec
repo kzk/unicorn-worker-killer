@@ -4,11 +4,11 @@ $:.push File.expand_path('../lib', __FILE__)
 Gem::Specification.new do |gem|
   gem.name        = "unicorn-worker-killer"
   gem.description = "Kill unicorn workers by memory and request counts"
-  gem.homepage    = "https://github.com/kzk/unicorn-worker-killer"
+  gem.homepage    = "https://github.com/kalyanceg/unicorn-worker-killer"
   gem.summary     = gem.description
   gem.version     = File.read("VERSION").strip
-  gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi"]
-  gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com"]
+  gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi","Kalyanasundaram"]
+  gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com","kalyanceg@gmail.com"]
   gem.has_rdoc    = false
   #gem.platform    = Gem::Platform::RUBY
   gem.files       = `git ls-files`.split("\n")
