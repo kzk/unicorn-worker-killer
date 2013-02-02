@@ -19,6 +19,8 @@ Add these lines to your `config.ru`.
     
     # Max requests per worker
     use Unicorn::WorkerKiller::MaxRequests, 3072, 4096
+
+    *note: use Unicorn::WorkerKiller::MaxRequests, 0, 0 disables MaxRequests checking*
     
     # Max memory size (RSS) per worker
     use Unicorn::WorkerKiller::Oom, (192*(1024**2)), (256*(1024**2))
