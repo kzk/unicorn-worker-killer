@@ -66,12 +66,12 @@ module Unicorn::WorkerKiller
               value = ls[1].to_i
               unit = ls[2]
               case unit.downcase
-              when 'kb'
-                return value*(1024**1)
-              when 'mb'
-                return value*(1024**2)
-              when 'gb'
-                return value*(1024**3)
+                when 'kb'
+                  return value*(1024**1)
+                when 'mb'
+                  return value*(1024**2)
+                when 'gb'
+                  return value*(1024**3)
               end
             end
           end
@@ -108,7 +108,9 @@ module Unicorn::WorkerKiller
       @_worker_max_requests ||= @_worker_cur_requests
       super(client) # Unicorn::HttpServer#process_client
 
-      if (@_worker_cur_requests -= 1) <= 0
+      if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0 # bypass the max requests work if but min & max are set to zero
+        logger.warn "MaxRequests check disabled"
+      elsif (@_worker_cur_requests -= 1) <= 0
         logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
         Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
       end
