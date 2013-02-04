@@ -1,3 +1,6 @@
+Release 0.3.2 - 2013/02/03
+  * add an option to disable the check for both MaxRequests and MaxMemory
+
 Release 0.3.1 - 2013/01/13
   * fix for ruby 1.9.2
 
