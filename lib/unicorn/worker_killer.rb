@@ -38,13 +38,17 @@ module Unicorn::WorkerKiller
       end
       app # pretend to be Rack middleware since it was in the past
     end
-
+    
+    def randomize(integer)
+      RUBY_VERSION > "1.9" ? Random.rand(integer) : rand(integer)
+    end
+    
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_memory_limit ||= @_worker_memory_limit_min + Random.rand(@_worker_memory_limit_max-@_worker_memory_limit_min+1)
+      @_worker_memory_limit ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
       @_worker_check_count += 1
       if @_worker_check_count % @_worker_check_cycle == 0
         rss = _worker_rss()
@@ -108,7 +112,7 @@ module Unicorn::WorkerKiller
       return if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_cur_requests ||= @_worker_max_requests_min + Random.rand(@_worker_max_requests_max-@_worker_max_requests_min+1)
+      @_worker_cur_requests ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
       @_worker_max_requests ||= @_worker_cur_requests
       if (@_worker_cur_requests -= 1) <= 0
         logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
