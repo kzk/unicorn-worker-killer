@@ -8,10 +8,10 @@ module Unicorn::WorkerKiller
     i = 0
     while true
       i += 1
-      sig = :TERM
-      if i > 10     # TODO configurable TERM MAX
-        sig = :QUIT
-      elsif i > 15  # TODO configurable QUIT MAX
+      sig = :QUIT
+      if i > 10     # TODO configurable QUIT MAX
+        sig = :TERM
+      elsif i > 15  # TODO configurable TERM MAX
         sig = :KILL
       end
 
