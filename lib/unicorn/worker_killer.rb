@@ -15,7 +15,7 @@ module Unicorn::WorkerKiller
         sig = :KILL
       end
 
-      logger.warn "#{self} send SIGTERM (pid: #{Process.pid}) alive: #{alive_sec} sec (trial #{i})"
+      logger.warn "#{self} send SIG#{sig} (pid: #{Process.pid}) alive: #{alive_sec} sec (trial #{i})"
       Process.kill sig, Process.pid
 
       sleep 1  # TODO configurable sleep
