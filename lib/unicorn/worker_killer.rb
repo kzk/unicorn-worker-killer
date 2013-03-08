@@ -1,6 +1,10 @@
 require 'unicorn/configuration'
 
 module Unicorn::WorkerKiller
+  class << self
+    attr_accessor :configuration
+  end
+
   # Self-destruction by sending the signals to myself. The process sometimes
   # doesn't terminate by SIGQUIT, so this tries to send SIGTERM and SIGKILL
   # if it doesn't finish immediately.
@@ -41,11 +45,11 @@ module Unicorn::WorkerKiller
       end
       app # pretend to be Rack middleware since it was in the past
     end
-    
+
     def randomize(integer)
       RUBY_VERSION > "1.9" ? Random.rand(integer) : rand(integer)
     end
-    
+
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
@@ -64,6 +68,7 @@ module Unicorn::WorkerKiller
     end
 
     private
+
     def _worker_rss
       proc_status = "/proc/#{Process.pid}/status"
       if File.exists? proc_status
@@ -110,6 +115,10 @@ module Unicorn::WorkerKiller
       app # pretend to be Rack middleware since it was in the past
     end
 
+    def randomize(integer)
+      RUBY_VERSION > "1.9" ? Random.rand(integer) : rand(integer)
+    end
+
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
       return if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0
@@ -129,7 +138,5 @@ module Unicorn::WorkerKiller
     yield(configuration) if block_given?
   end
 
-  class << self
-    attr_accessor :configuration
-  end
+  self.configure
 end
