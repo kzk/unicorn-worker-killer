@@ -2,8 +2,9 @@ require 'unicorn/configuration'
 
 module Unicorn::WorkerKiller
   # Self-destruction by sending the signals to myself. The process sometimes
-  # doesn't terminate by SIGTERM, so this tries to send SIGQUIT and SIGKILL
+  # doesn't terminate by SIGQUIT, so this tries to send SIGTERM and SIGKILL
   # if it doesn't finish immediately.
+  # @see http://unicorn.bogomips.org/SIGNALS.html
   def self.kill_self(logger, start_time)
     alive_sec = (Time.now - start_time).to_i
 
