@@ -1,3 +1,5 @@
+require 'unicorn/configuration'
+
 module Unicorn::WorkerKiller
   # Self-destruction by sending the signals to myself. The process sometimes
   # doesn't terminate by SIGTERM, so this tries to send SIGQUIT and SIGKILL
@@ -9,16 +11,16 @@ module Unicorn::WorkerKiller
     while true
       i += 1
       sig = :QUIT
-      if i > 10     # TODO configurable QUIT MAX
+      if i > configuration.max_quit
         sig = :TERM
-      elsif i > 15  # TODO configurable TERM MAX
+      elsif i > configuration.max_term
         sig = :KILL
       end
 
       logger.warn "#{self} send SIGTERM (pid: #{Process.pid}) alive: #{alive_sec} sec (trial #{i})"
       Process.kill sig, Process.pid
 
-      sleep 1  # TODO configurable sleep
+      sleep configuration.sleep_interval
     end
   end
 
@@ -119,5 +121,14 @@ module Unicorn::WorkerKiller
         Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
       end
     end
+  end
+
+  def self.configure
+    self.configuration ||= Configuration.new
+    yield(configuration) if block_given?
+  end
+
+  class << self
+    attr_accessor :configuration
   end
 end
