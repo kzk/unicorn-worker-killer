@@ -11,22 +11,29 @@ module Unicorn::WorkerKiller
   # @see http://unicorn.bogomips.org/SIGNALS.html
   def self.kill_self(logger, start_time)
     alive_sec = (Time.now - start_time).to_i
+    worker_pid = Process.pid
 
-    i = 0
-    while true
-      i += 1
-      sig = :QUIT
-      if i > configuration.max_quit
-        sig = :TERM
-      elsif i > configuration.max_term
-        sig = :KILL
+    Thread.new do
+      i = 0
+
+      while pid_exist?(worker_pid)
+        i += 1
+
+        sig = :QUIT
+        sig = :TERM if i > configuration.max_quit
+        sig = :KILL if i > configuration.max_term
+
+        logger.warn "#{self} send SIG#{sig} (pid: #{worker_pid}) alive: #{alive_sec} sec (trial #{i})"
+        Process.kill sig, worker_pid
+
+        sleep configuration.sleep_interval
       end
-
-      logger.warn "#{self} send SIG#{sig} (pid: #{Process.pid}) alive: #{alive_sec} sec (trial #{i})"
-      Process.kill sig, Process.pid
-
-      sleep configuration.sleep_interval
     end
+  end
+
+  def self.pid_exist?(pid)
+    Process.getpgid(pid)
+  rescue Errno::ESRCH
   end
 
   module Oom
@@ -52,11 +59,13 @@ module Unicorn::WorkerKiller
 
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
+
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
 
       @_worker_process_start ||= Time.now
       @_worker_memory_limit ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
       @_worker_check_count += 1
+
       if @_worker_check_count % @_worker_check_cycle == 0
         rss = _worker_rss()
         if rss > @_worker_memory_limit
@@ -112,6 +121,7 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_worker_max_requests_min, max_requests_min)
         s.instance_variable_set(:@_worker_max_requests_max, max_requests_max)
       end
+
       app # pretend to be Rack middleware since it was in the past
     end
 
@@ -126,6 +136,7 @@ module Unicorn::WorkerKiller
       @_worker_process_start ||= Time.now
       @_worker_cur_requests ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
       @_worker_max_requests ||= @_worker_cur_requests
+
       if (@_worker_cur_requests -= 1) <= 0
         logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
         Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)

@@ -7,8 +7,8 @@ Gem::Specification.new do |gem|
   gem.homepage    = "https://github.com/kzk/unicorn-worker-killer"
   gem.summary     = gem.description
   gem.version     = File.read("VERSION").strip
-  gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi"]
-  gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com"]
+  gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi", "Jonathan Clem"]
+  gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com", "jonathan@jclem.net"]
   gem.has_rdoc    = false
   #gem.platform    = Gem::Platform::RUBY
   gem.files       = `git ls-files`.split("\n")

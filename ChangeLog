@@ -1,3 +1,7 @@
+Release 0.4.0 - 2013/03/12
+  * Send signals from inside a Thread (required for QUIT signal)
+  * Fix broken if/else in kill_self
+
 Release 0.3.6 - 2013/03/09
   * do not require configuration
   * fix missing randomize() in MaxRequests killer
