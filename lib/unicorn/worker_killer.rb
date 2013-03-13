@@ -13,27 +13,15 @@ module Unicorn::WorkerKiller
     alive_sec = (Time.now - start_time).to_i
     worker_pid = Process.pid
 
-    Thread.new do
-      i = 0
+    @@kill_attempts ||= 0
+    @@kill_attempts += 1
 
-      while pid_exist?(worker_pid)
-        i += 1
+    sig = :QUIT
+    sig = :TERM if @@kill_attempts > configuration.max_quit
+    sig = :KILL if @@kill_attempts > configuration.max_term
 
-        sig = :QUIT
-        sig = :TERM if i > configuration.max_quit
-        sig = :KILL if i > configuration.max_term
-
-        logger.warn "#{self} send SIG#{sig} (pid: #{worker_pid}) alive: #{alive_sec} sec (trial #{i})"
-        Process.kill sig, worker_pid
-
-        sleep configuration.sleep_interval
-      end
-    end
-  end
-
-  def self.pid_exist?(pid)
-    Process.getpgid(pid)
-  rescue Errno::ESRCH
+    logger.warn "#{self} send SIG#{sig} (pid: #{worker_pid}) alive: #{alive_sec} sec (trial #{@@kill_attempts})"
+    Process.kill sig, worker_pid
   end
 
   module Oom
