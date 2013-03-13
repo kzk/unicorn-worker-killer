@@ -5,9 +5,10 @@ module Unicorn::WorkerKiller
     attr_accessor :configuration
   end
 
-  # Self-destruction by sending the signals to myself. The process sometimes
-  # doesn't terminate by SIGQUIT, so this tries to send SIGTERM and SIGKILL
-  # if it doesn't finish immediately.
+  # Kill a the current process by telling it to send signals to itself. If
+  # the process isn't killed after `configuration.max_quit` QUIT signals,
+  # send TERM signals until `configuration.max_term`. Finally, send a KILL
+  # signal. A single signal is sent per request.
   # @see http://unicorn.bogomips.org/SIGNALS.html
   def self.kill_self(logger, start_time)
     alive_sec = (Time.now - start_time).to_i
