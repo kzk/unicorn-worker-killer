@@ -5,7 +5,7 @@ module Unicorn::WorkerKiller
     attr_accessor :configuration
   end
 
-  # Kill a the current process by telling it to send signals to itself. If
+  # Kill the current process by telling it to send signals to itself. If
   # the process isn't killed after `configuration.max_quit` QUIT signals,
   # send TERM signals until `configuration.max_term`. Finally, send a KILL
   # signal. A single signal is sent per request.
