@@ -11,7 +11,7 @@ module Unicorn::WorkerKiller
   # signal. A single signal is sent per request.
   # @see http://unicorn.bogomips.org/SIGNALS.html
   def self.kill_self(logger, start_time)
-    alive_sec = (Time.now - start_time).to_i
+    alive_sec = (Time.now - start_time).round
     worker_pid = Process.pid
 
     @@kill_attempts ||= 0
