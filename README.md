@@ -38,6 +38,3 @@ This module automatically restarts the Unicorn workers, based on its memory size
 `memory_limit_min` and `memory_limit_max` specify the min and max of maximum memory per worker. The actual limit is decided by rand() between `memory_limit_min` and `memory_limit_max` per worker, to prevent all workers to be dead at the same time.  Once the memory size exceeds `memory_size`, that worker is automatically restarted.
 
 The memory size check is done in every `check_cycle` requests.
-
-# TODO
-- Get RSS (Resident Set Size) without forking the child process at Mac OS and Windows
