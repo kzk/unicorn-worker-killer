@@ -1,6 +1,6 @@
 # unicorn-worker-killer
 
-[Unicorn](http://unicorn.bogomips.org/) is widely used HTTP-server for Rack applications. One thing we thought Unicorn misssed, is killing the Unicorn workers based on the number of requests and consumed memories.
+[Unicorn](http://unicorn.bogomips.org/) is widely used HTTP-server for Rack applications. One thing we thought Unicorn missed, is killing the Unicorn workers based on the number of requests and consumed memories.
 
 `unicorn-worker-killer` gem provides automatic restart of Unicorn workers based on 1) max number of requests, and 2) process memory size (RSS), without affecting any requests. This will greatly improves site's stability by avoiding unexpected memory exhaustion at the application nodes.
 
@@ -12,7 +12,7 @@ No external process like `god` is required. Just install one gem: `unicorn-worke
 
 # Usage
 
-Add these lines to your `config.ru`.
+Add these lines to your `config.ru`. (These lines should be added above the `require ::File.expand_path('../config/environment',  __FILE__)` line.
 
     # Unicorn self-process killer
     require 'unicorn/worker_killer'
