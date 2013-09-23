@@ -25,7 +25,7 @@ Add these lines to your `config.ru`. (These lines should be added above the `req
 
 This gem provides two modules.
 
-### Unicorn::WorkerKiller::MaxRequests(max_requests_min=3072, max_requests_max=4096)
+### Unicorn::WorkerKiller::MaxRequests(max_requests_min=3072, max_requests_max=4096, verbose=false)
 
 This module automatically restarts the Unicorn workers, based on the number of requests which worker processed.
 
