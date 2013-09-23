@@ -1,3 +1,6 @@
+Release 0.4.2 - 2013/09/23
+  * `verbose` options provides verbose logging
+
 Release 0.4.1 - 2013/03/12
   * Kill attempts happen once per request, not in a loop
 
