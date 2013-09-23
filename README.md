@@ -31,13 +31,17 @@ This module automatically restarts the Unicorn workers, based on the number of r
 
 `max_requests_min` and `max_requests_max` specify the min and max of maximum requests per worker. The actual limit is decided by rand() between `max_requests_min` and `max_requests_max` per worker, to prevent all workers to be dead at the same time. Once the number exceeds the limit, that worker is automatically restarted.
 
-### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024**3), memory_limit_max=(2*(1024**3)), check_cycle = 16)
+If `verbose` is set to true, then after every request, your log will show the requests left before restart.  This logging is done at the `info` level.
+
+### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024**3), memory_limit_max=(2*(1024**3)), check_cycle = 16, verbose = false)
 
 This module automatically restarts the Unicorn workers, based on its memory size.
 
 `memory_limit_min` and `memory_limit_max` specify the min and max of maximum memory per worker. The actual limit is decided by rand() between `memory_limit_min` and `memory_limit_max` per worker, to prevent all workers to be dead at the same time.  Once the memory size exceeds `memory_size`, that worker is automatically restarted.
 
 The memory size check is done in every `check_cycle` requests.
+
+If `verbose` is set to true, then every memory size check will be shown in your logs.   This logging is done at the `info` level.
 
 # Special Thanks
 
