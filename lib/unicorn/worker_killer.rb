@@ -38,7 +38,7 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_worker_memory_limit_max, memory_limit_max)
         s.instance_variable_set(:@_worker_check_cycle, check_cycle)
         s.instance_variable_set(:@_worker_check_count, 0)
-        s.instance_variable_set(:@_verbose, verbose)
+        s.instance_variable_set(:@_worker_mermory_verbose, verbose)
       end
       app # pretend to be Rack middleware since it was in the past
     end
@@ -57,7 +57,7 @@ module Unicorn::WorkerKiller
 
       if @_worker_check_count % @_worker_check_cycle == 0
         rss = _worker_rss()
-        logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
+        logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_worker_mermory_verbose
         if rss > @_worker_memory_limit
           logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
           Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
@@ -110,7 +110,7 @@ module Unicorn::WorkerKiller
         s.extend(self)
         s.instance_variable_set(:@_worker_max_requests_min, max_requests_min)
         s.instance_variable_set(:@_worker_max_requests_max, max_requests_max)
-        s.instance_variable_set(:@_verbose, verbose)
+        s.instance_variable_set(:@_worker_requets_verbose, verbose)
       end
 
       app # pretend to be Rack middleware since it was in the past
@@ -127,7 +127,7 @@ module Unicorn::WorkerKiller
       @_worker_process_start ||= Time.now
       @_worker_cur_requests ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
       @_worker_max_requests ||= @_worker_cur_requests
-      logger.info "#{self}: worker (pid: #{Process.pid}) has #{@_worker_cur_requests} left before being killed" if @_verbose
+      logger.info "#{self}: worker (pid: #{Process.pid}) has #{@_worker_cur_requests} left before being killed" if @_worker_requets_verbose
 
       if (@_worker_cur_requests -= 1) <= 0
         logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
