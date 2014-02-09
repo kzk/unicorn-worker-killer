@@ -1,4 +1,5 @@
 require 'unicorn/configuration'
+require 'get_process_mem'
 
 module Unicorn::WorkerKiller
   class << self
@@ -54,9 +55,8 @@ module Unicorn::WorkerKiller
       @_worker_process_start ||= Time.now
       @_worker_memory_limit ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
       @_worker_check_count += 1
-
       if @_worker_check_count % @_worker_check_cycle == 0
-        rss = _worker_rss()
+        rss = GetProcessMem.new.bytes
         logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
         if rss > @_worker_memory_limit
           logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
@@ -64,38 +64,6 @@ module Unicorn::WorkerKiller
         end
         @_worker_check_count = 0
       end
-    end
-
-    private
-
-    def _worker_rss
-      proc_status = "/proc/#{Process.pid}/status"
-      if File.exists? proc_status
-        open(proc_status).each_line { |l|
-          if l.include? 'VmRSS'
-            ls = l.split
-            if ls.length == 3
-              value = ls[1].to_i
-              unit = ls[2]
-              case unit.downcase
-              when 'kb'
-                return value*(1024**1)
-              when 'mb'
-                return value*(1024**2)
-              when 'gb'
-                return value*(1024**3)
-              end
-            end
-          end
-        }
-      end
-
-      # Forking the child process sometimes fails under low memory condition.
-      # It would be ideal for not forking the process to get RSS. For Linux,
-      # this module reads '/proc/<pid>/status' to get RSS, but not for other
-      # environments (e.g. MacOS and Windows).
-      kb = `ps -o rss= -p #{Process.pid}`.to_i
-      return kb * 1024
     end
   end
 
