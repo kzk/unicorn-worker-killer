@@ -1,4 +1,4 @@
-module Unicorn::WorkerKiller
+module UnicornWorkerKiller
   class Configuration
     attr_accessor :max_quit, :max_term, :sleep_interval
 

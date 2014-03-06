@@ -1,9 +1,10 @@
 # encoding: utf-8
 $:.push File.expand_path('../lib', __FILE__)
+require "unicorn_worker_killer/version"
 
 Gem::Specification.new do |gem|
-  gem.name        = "unicorn-worker-killer"
-  gem.version     = File.read("VERSION").strip
+  gem.name        = "unicorn_worker_killer"
+  gem.version     = UnicornWorkerKiller::VERSION
   gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi", "Jonathan Clem"]
   gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com", "jonathan@jclem.net"]
   gem.description = "Kill unicorn workers according to memory and request count"

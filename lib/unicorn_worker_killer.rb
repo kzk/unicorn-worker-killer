@@ -1,7 +1,8 @@
-require 'unicorn/configuration'
 require 'get_process_mem'
+require 'unicorn_worker_killer/configuration'
+require 'unicorn_worker_killer/version'
 
-module Unicorn::WorkerKiller
+module UnicornWorkerKiller
   class << self
     attr_accessor :configuration
   end
