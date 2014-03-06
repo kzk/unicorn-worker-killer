@@ -19,5 +19,6 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "unicorn",         "~> 4"
   gem.add_dependency "get_process_mem", "~> 0"
-  gem.add_development_dependency "rake", "~> 10.1"
+  gem.add_development_dependency "rake",  "~> 10.1"
+  gem.add_development_dependency "rspec", "~> 2"
 end
