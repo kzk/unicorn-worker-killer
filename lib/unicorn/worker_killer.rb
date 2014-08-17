@@ -104,6 +104,37 @@ module Unicorn::WorkerKiller
     end
   end
 
+  module PathRequest
+    # Killing the process must be occurred at the outside of the request. We're
+    # using similar techniques used by OobGC, to ensure actual killing doesn't
+    # affect the request.
+    #
+    # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
+    def self.new(app, path_request= %r{\A/} , verbose = false)
+      ObjectSpace.each_object(Unicorn::HttpServer) do |s|
+        s.extend(self)
+        s.instance_variable_set(:@_worker_path_request, path_request)
+        s.instance_variable_set(:@_verbose, verbose)
+        self.const_set :WORK_ENV, s.instance_variable_get(:@request).env
+      end
+         
+      app # pretend to be Rack middleware since it was in the past
+    end
+    PATH_INFO = "PATH_INFO"
+    
+    def process_client(client)
+      super(client) # Unicorn::HttpServer#process_client
+
+      @_worker_process_start ||= Time.now
+      logger.info "#{self}: worker (pid: #{Process.pid}) path of request #{WORK_ENV[PATH_INFO]} " if @_verbose
+
+      if (@_worker_path_request =~ WORK_ENV[PATH_INFO])
+        logger.warn "#{self}: worker (pid: #{Process.pid}) path of request #{WORK_ENV[PATH_INFO]}  is match with regex #{@_worker_path_request}"
+        Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
+      end
+    end
+  end
+
   def self.configure
     self.configuration ||= Configuration.new
     yield(configuration) if block_given?
