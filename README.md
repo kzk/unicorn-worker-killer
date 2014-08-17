@@ -26,7 +26,7 @@ Add these lines to your `config.ru`. (These lines should be added above the `req
     # Max memory size (RSS) per worker
     use Unicorn::PathRequest, "path/to/action"
 
-This gem provides tree modules.
+This gem provides three modules.
 
 ### Unicorn::WorkerKiller::MaxRequests(max_requests_min=3072, max_requests_max=4096, verbose=false)
 
