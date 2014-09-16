@@ -19,8 +19,8 @@ module Unicorn::WorkerKiller
     @@kill_attempts += 1
 
     sig = :QUIT
-    sig = :TERM if @@kill_attempts > configuration.max_quit
-    sig = :KILL if @@kill_attempts > configuration.max_term
+    sig = :TERM if configuration.max_quit && @@kill_attempts > configuration.max_quit
+    sig = :KILL if configuration.max_term && @@kill_attempts > configuration.max_term
 
     logger.warn "#{self} send SIG#{sig} (pid: #{worker_pid}) alive: #{alive_sec} sec (trial #{@@kill_attempts})"
     Process.kill sig, worker_pid
