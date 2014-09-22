@@ -33,7 +33,7 @@ This module automatically restarts the Unicorn workers, based on the number of r
 
 If `verbose` is set to true, then after every request, your log will show the requests left before restart.  This logging is done at the `info` level.
 
-### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024**3), memory_limit_max=(2*(1024**3)), check_cycle = 16, verbose = false)
+### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024**3), memory_limit_max=(2*(1024**3)), check_cycle = 16, verbose = false, object_space_dump = false)
 
 This module automatically restarts the Unicorn workers, based on its memory size.
 
@@ -42,6 +42,8 @@ This module automatically restarts the Unicorn workers, based on its memory size
 The memory size check is done in every `check_cycle` requests.
 
 If `verbose` is set to true, then every memory size check will be shown in your logs.   This logging is done at the `info` level.
+
+If `object_space_dump` is set to true, before killing a process for memory reason, memory object space is dumped to file. By default the file name is `/tmp/unicorn_worker_$PID.json` and can be changed in `Unicorn::WorkerKiller::Configuration` class. Dump file is generated through `ObjectSpace.dump_all` that is available from Ruby 2.1
 
 # Special Thanks
 
