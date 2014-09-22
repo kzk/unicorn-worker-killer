@@ -74,6 +74,7 @@ module Unicorn::WorkerKiller
         if lock_for_dump
           dump_file = Unicorn::WorkerKiller.configuration.object_space_dump_file.gsub(/\$PID/, Process.pid.to_s)
           GC.start
+          require 'objspace'
           ObjectSpace.dump_all(output: File.open(dump_file, 'w'))
           release_lock_for_dump
         end
