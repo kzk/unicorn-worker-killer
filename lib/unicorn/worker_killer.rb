@@ -42,7 +42,10 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_verbose, verbose)
         s.instance_variable_set(:@_object_space_dump, object_space_dump)
       end
-      trap_sigabrt if object_space_dump
+      if object_space_dump
+        require 'objspace'
+        trap_sigabrt
+      end
       app # pretend to be Rack middleware since it was in the past
     end
 
@@ -74,7 +77,6 @@ module Unicorn::WorkerKiller
         if lock_for_dump
           dump_file = Unicorn::WorkerKiller.configuration.object_space_dump_file.gsub(/\$PID/, Process.pid.to_s)
           GC.start
-          require 'objspace'
           ObjectSpace.dump_all(output: File.open(dump_file, 'w'))
           release_lock_for_dump
         end
