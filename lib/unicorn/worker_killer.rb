@@ -45,7 +45,7 @@ module Unicorn::WorkerKiller
     end
 
     def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer) : rand(integer)
+      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
     def process_client(client)
@@ -85,7 +85,7 @@ module Unicorn::WorkerKiller
     end
 
     def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer) : rand(integer)
+      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
     def process_client(client)
