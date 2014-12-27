@@ -11,14 +11,14 @@ module Unicorn::WorkerKiller
   # send TERM signals until `configuration.max_term`. Finally, send a KILL
   # signal. A single signal is sent per request.
   # @see http://unicorn.bogomips.org/SIGNALS.html
-  def self.kill_self(logger, start_time)
+  def self.kill_self(logger, start_time, first_signal=:QUIT)
     alive_sec = (Time.now - start_time).round
     worker_pid = Process.pid
 
     @@kill_attempts ||= 0
     @@kill_attempts += 1
 
-    sig = :QUIT
+    sig = first_signal
     sig = :TERM if @@kill_attempts > configuration.max_quit
     sig = :KILL if @@kill_attempts > configuration.max_term
 
@@ -32,7 +32,7 @@ module Unicorn::WorkerKiller
     # affect the request.
     #
     # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
-    def self.new(app, memory_limit_min = (1024**3), memory_limit_max = (2*(1024**3)), check_cycle = 16, verbose = false)
+    def self.new(app, memory_limit_min = (1024**3), memory_limit_max = (2*(1024**3)), check_cycle = 16, verbose = false, object_space_dump=false)
       ObjectSpace.each_object(Unicorn::HttpServer) do |s|
         s.extend(self)
         s.instance_variable_set(:@_worker_memory_limit_min, memory_limit_min)
@@ -40,6 +40,11 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_worker_check_cycle, check_cycle)
         s.instance_variable_set(:@_worker_check_count, 0)
         s.instance_variable_set(:@_verbose, verbose)
+        s.instance_variable_set(:@_object_space_dump, object_space_dump)
+      end
+      if object_space_dump
+        require 'objspace'
+        trap_sigabrt
       end
       app # pretend to be Rack middleware since it was in the past
     end
@@ -60,10 +65,32 @@ module Unicorn::WorkerKiller
         logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
         if rss > @_worker_memory_limit
           logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
-          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
+          first_signal = @_object_space_dump ? :SIGABRT : :QUIT
+          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start, first_signal)
         end
         @_worker_check_count = 0
       end
+    end
+
+    def self.trap_sigabrt
+      trap(:SIGABRT) do
+        if lock_for_dump
+          dump_file = Unicorn::WorkerKiller.configuration.object_space_dump_file.gsub(/\$PID/, Process.pid.to_s)
+          GC.start
+          ObjectSpace.dump_all(output: File.open(dump_file, 'w'))
+          release_lock_for_dump
+        end
+        Process.kill(:QUIT, Process.pid)
+      end
+    end
+
+    def self.lock_for_dump
+      @lock_for_dump_file = File.open(Unicorn::WorkerKiller.configuration.object_space_dump_lock, File::RDWR|File::CREAT, 0644)
+      @lock_for_dump_file.flock(File::LOCK_NB|File::LOCK_EX)
+    end
+
+    def self.release_lock_for_dump
+      @lock_for_dump_file.close
     end
   end
 
