@@ -1,3 +1,4 @@
+require 'unicorn'
 require 'unicorn/worker_killer/configuration'
 require 'get_process_mem'
 
