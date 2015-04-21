@@ -33,7 +33,7 @@ This module automatically restarts the Unicorn workers, based on the number of r
 
 If `verbose` is set to true, then after every request, your log will show the requests left before restart.  This logging is done at the `info` level.
 
-### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024**3), memory_limit_max=(2*(1024**3)), check_cycle = 16, verbose = false)
+### Unicorn::WorkerKiller::Oom(memory_limit_min=(1024\*\*3), memory_limit_max=(2\*(1024\*\*3)), check_cycle = 16, verbose = false)
 
 This module automatically restarts the Unicorn workers, based on its memory size.
 
