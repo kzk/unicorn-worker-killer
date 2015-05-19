@@ -104,6 +104,48 @@ module Unicorn::WorkerKiller
     end
   end
 
+  # Enable manual requests of restarting in a clean manner by calling +Unicorn::WorkerKiller::DelayedRestart.restart_worker_in_a_delayed_manner!+
+  # Example: Useful for rack-timeout handling where we want to catch & report the timeout (as recommended in
+  #     heroku https://devcenter.heroku.com/articles/rails-unicorn#rack-timeout) and still restart the worker out
+  #     of the request context and avoid H13 errors.
+  module DelayedRestart
+    # Killing the process must be occurred at the outside of the request. We're
+    # using similar techniques used by OobGC, to ensure actual killing doesn't
+    # affect the request.
+    #
+    # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
+    def self.new(app, verbose = false)
+      ObjectSpace.each_object(Unicorn::HttpServer) do |s|
+        s.extend(self)
+        s.instance_variable_set(:@_worker_restart_requested, false)
+        s.instance_variable_set(:@_verbose, verbose)
+      end
+      app # pretend to be Rack middleware since it was in the past
+    end
+
+    def randomize(integer)
+      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
+    end
+
+    def process_client(client)
+      super(client) # Unicorn::HttpServer#process_client
+
+      logger.info {"#{self}: worker (pid: #{Process.pid}): restarted was #{'not ' unless @_worker_restart_requested}requested"} if @_verbose
+      @_worker_process_start ||= Time.now
+      if @_worker_restart_requested
+        logger.warn "#{self}: worker (pid: #{Process.pid}), restarting due to request! "
+        Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
+      end
+    end
+
+    def self.restart_worker_in_a_delayed_manner!
+      ObjectSpace.each_object(Unicorn::HttpServer) do |s|
+        s.instance_variable_set(:@_worker_restart_requested, true)
+      end
+    end
+  end
+
+
   def self.configure
     self.configuration ||= Configuration.new
     yield(configuration) if block_given?
