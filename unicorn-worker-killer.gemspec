@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.licenses    = ["GPLv2+", "Ruby 1.8"]
   gem.require_paths = ['lib']
-  gem.add_dependency "unicorn",         "~> 4"
+  gem.add_dependency "unicorn",         [">= 4", "< 6"]
   gem.add_dependency "get_process_mem", "~> 0"
   gem.add_development_dependency "rake", ">= 0.9.2"
 end
