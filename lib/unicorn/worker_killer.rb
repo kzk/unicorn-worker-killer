@@ -1,4 +1,4 @@
-require 'unicorn/configuration'
+require 'unicorn/worker_killer/configuration'
 require 'get_process_mem'
 
 module Unicorn::WorkerKiller
