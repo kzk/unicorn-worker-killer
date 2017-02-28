@@ -1,8 +1,8 @@
 # unicorn-worker-killer
 
-[Unicorn](http://unicorn.bogomips.org/) is widely used HTTP-server for Rack applications. One thing we thought Unicorn missed, is killing the Unicorn workers based on the number of requests and consumed memories.
+[Unicorn](http://unicorn.bogomips.org/) is widely used HTTP-server for Rack applications. One thing we thought Unicorn missed, is killing the Unicorn workers based on the number of requests, consumed memories and path of request.
 
-`unicorn-worker-killer` gem provides automatic restart of Unicorn workers based on 1) max number of requests, and 2) process memory size (RSS), without affecting any requests. This will greatly improves site's stability by avoiding unexpected memory exhaustion at the application nodes.
+`unicorn-worker-killer` gem provides automatic restart of Unicorn workers based on 1) max number of requests, 2) process memory size (RSS) and 3) path of request, without affecting any requests. This will greatly improves site's stability by avoiding unexpected memory exhaustion at the application nodes.
 
 # Install
 
@@ -23,7 +23,10 @@ Add these lines to your `config.ru`. (These lines should be added above the `req
     # Max memory size (RSS) per worker
     use Unicorn::WorkerKiller::Oom, (192*(1024**2)), (256*(1024**2))
 
-This gem provides two modules.
+    # Max memory size (RSS) per worker
+    use Unicorn::PathRequest, "path/to/action"
+
+This gem provides three modules.
 
 ### `Unicorn::WorkerKiller::MaxRequests(max_requests_min=3072, max_requests_max=4096, verbose=false)`
 
@@ -40,6 +43,14 @@ This module automatically restarts the Unicorn workers, based on its memory size
 `memory_limit_min` and `memory_limit_max` specify the min and max of maximum memory in bytes per worker. The actual limit is decided by rand() between `memory_limit_min` and `memory_limit_max` per worker, to prevent all workers to be dead at the same time.  Once the memory size exceeds `memory_size`, that worker is automatically restarted.
 
 The memory size check is done in every `check_cycle` requests.
+
+If `verbose` is set to true, then every memory size check will be shown in your logs.   This logging is done at the `info` level.
+
+### Unicorn::WorkerKiller::PathRequest(path_request= %r{\A/} , verbose = false)
+
+This module automatically restarts the Unicorn workers, based on its path of request.
+
+`path_request` specify the path do request of worker. Once the match path of request, that worker is automatically restarted.
 
 If `verbose` is set to true, then every memory size check will be shown in your logs.   This logging is done at the `info` level.
 
