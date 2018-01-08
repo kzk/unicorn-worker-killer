@@ -1,12 +1,15 @@
 # encoding: utf-8
-$:.push File.expand_path('../lib', __FILE__)
+lib = File.expand_path('../lib/', __FILE__)
+$LOAD_PATH.unshift lib unless $LOAD_PATH.include?(lib)
+
+require 'unicorn/worker_killer/version'
 
 Gem::Specification.new do |gem|
   gem.name        = "unicorn-worker-killer"
   gem.description = "Kill unicorn workers by memory and request counts"
   gem.homepage    = "https://github.com/kzk/unicorn-worker-killer"
   gem.summary     = gem.description
-  gem.version     = File.read("VERSION").strip
+  gem.version     = Unicorn::WorkerKiller::VERSION
   gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi", "Jonathan Clem"]
   gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com", "jonathan@jclem.net"]
   gem.has_rdoc    = false
@@ -19,4 +22,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency "unicorn",         [">= 4", "< 6"]
   gem.add_dependency "get_process_mem", "~> 0"
   gem.add_development_dependency "rake", ">= 0.9.2"
+  gem.add_development_dependency "rspec"
 end
