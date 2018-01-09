@@ -31,7 +31,7 @@ describe Unicorn::WorkerKiller::Oom do
       }.to change { http_server.instance_variable_get(:@_worker_process_start) }.to(Time.now)
     end
 
-    context 'when check cycle reached' do
+    context 'when check and kill cycle reached' do
       before { http_server.instance_variable_set(:@_worker_check_count, 2) }
 
       it 'resets check counter' do
