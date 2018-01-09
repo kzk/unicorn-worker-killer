@@ -30,19 +30,19 @@ module Unicorn
         @_worker_memory_limit  ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
         @_worker_check_count   += 1
 
-        if @_worker_check_count % @_worker_check_cycle == 0
-          rss = GetProcessMem.new.bytes
+        return unless @_worker_check_count % @_worker_check_cycle == 0
 
-          logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
+        bytes_used = GetProcessMem.new.bytes
 
-          if rss > @_worker_memory_limit
-            logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
+        logger.info "#{self}: worker (pid: #{Process.pid}) using #{bytes_used} bytes." if @_verbose
 
-            Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
-          end
+        if bytes_used > @_worker_memory_limit
+          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{bytes_used} bytes > #{@_worker_memory_limit} bytes)"
 
-          @_worker_check_count = 0
+          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
         end
+
+        @_worker_check_count = 0
       end
     end
   end

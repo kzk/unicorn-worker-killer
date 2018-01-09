@@ -30,11 +30,13 @@ module Unicorn
 
         logger.info "#{self}: worker (pid: #{Process.pid}) has #{@_worker_cur_requests} left before being killed" if @_verbose
 
-        if (@_worker_cur_requests -= 1) <= 0
-          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
+        @_worker_cur_requests -= 1
 
-          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
-        end
+        return if @_worker_cur_requests > 0
+
+        logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
+
+        Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
       end
     end
   end
