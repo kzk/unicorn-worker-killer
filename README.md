@@ -1,6 +1,6 @@
 # unicorn-worker-killer
 
-[![Build Status](https://travis-ci.org/ViliusLuneckas/unicorn-worker-killer.svg?branch=feature%2Fadd-rspec)](https://travis-ci.org/ViliusLuneckas/unicorn-worker-killer)
+[![Build Status](https://travis-ci.org/kzk/unicorn-worker-killer.svg?branch=master)](https://travis-ci.org/kzk/unicorn-worker-killer)
 
 [Unicorn](http://unicorn.bogomips.org/) is widely used HTTP-server for Rack applications. One thing we thought Unicorn missed, is killing the Unicorn workers based on the number of requests and consumed memories.
 

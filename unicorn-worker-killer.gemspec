@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.name    = 'unicorn-worker-killer'
   s.version = Unicorn::WorkerKiller::VERSION
   s.authors = ['Kazuki Ohta', 'Sadayuki Furuhashi', 'Jonathan Clem']
-  s.email   = ['kazuki.ohta@gmail.com', 'frsyuki@gmail.com', 'jonathan@jclem.net']
+  s.email   = ['kazuki.ohta@gmail.com', 'frsyuki@gmail.com', 'jonathan@jclem.net', 'vilius.luneckas@gmail.com']
 
   s.homepage    = 'https://github.com/kzk/unicorn-worker-killer'
   s.description = 'Kill unicorn workers by memory and request counts'
