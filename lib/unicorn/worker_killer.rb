@@ -2,6 +2,7 @@ require 'unicorn'
 require 'get_process_mem'
 
 require 'unicorn/worker_killer/configuration'
+require 'unicorn/worker_killer/randomize'
 require 'unicorn/worker_killer/middleware/max_requests'
 require 'unicorn/worker_killer/middleware/oom'
 

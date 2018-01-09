@@ -1,6 +1,8 @@
 module Unicorn
   module WorkerKiller
     module Oom
+      include Randomize
+
       # Killing the process must be occurred at the outside of the request. We're
       # using similar techniques used by OobGC, to ensure actual killing doesn't
       # affect the request.
@@ -17,10 +19,6 @@ module Unicorn
         end
 
         app # pretend to be Rack middleware since it was in the past
-      end
-
-      def randomize(integer)
-        RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
       end
 
       def process_client(client)

@@ -1,6 +1,8 @@
 module Unicorn
   module WorkerKiller
     module MaxRequests
+      include Randomize
+
       # Killing the process must be occurred at the outside of the request. We're
       # using similar techniques used by OobGC, to ensure actual killing doesn't
       # affect the request.
@@ -17,14 +19,10 @@ module Unicorn
         app # pretend to be Rack middleware since it was in the past
       end
 
-      def randomize(integer)
-        RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
-      end
-
       def process_client(client)
         super(client) # Unicorn::HttpServer#process_client
 
-        return if @_worker_max_requests_min.zero? == 0 && @_worker_max_requests_max == 0
+        return if @_worker_max_requests_min.zero? && @_worker_max_requests_max.zero?
 
         @_worker_process_start ||= Time.now
         @_worker_cur_requests  ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)

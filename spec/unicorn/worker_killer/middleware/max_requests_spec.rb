@@ -32,12 +32,23 @@ describe Unicorn::WorkerKiller::MaxRequests do
     end
 
     context 'when requests counter reaches zero' do
-      it 'performs suicide' do
-        http_server.instance_variable_set(:@_worker_cur_requests, 1)
+      before { http_server.instance_variable_set(:@_worker_cur_requests, 1) }
 
+      it 'performs suicide' do
         expect(Unicorn::WorkerKiller).to receive(:kill_self)
 
         subject
+      end
+
+      context 'when max requests min and max are zeros' do
+        it 'does nothing' do
+          http_server.instance_variable_set(:@_worker_max_requests_min, 0)
+          http_server.instance_variable_set(:@_worker_max_requests_max, 0)
+
+          expect(Unicorn::WorkerKiller).not_to receive(:kill_self)
+
+          subject
+        end
       end
     end
   end
