@@ -8,7 +8,7 @@
 
 No external process like `god` is required. Just install one gem: `unicorn-worker-killer`.
 
-    gem 'unicorn-worker-killer'
+    gem install 'unicorn-worker-killer'
 
 # Usage
 
