@@ -1,0 +1,29 @@
+PATH
+  remote: .
+  specs:
+    unicorn-worker-killer (0.4.4)
+      get_process_mem (~> 0)
+      unicorn (>= 4, <= 6)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ffi (1.15.3)
+    get_process_mem (0.2.7)
+      ffi (~> 1.0)
+    kgio (2.11.4)
+    raindrops (0.19.2)
+    rake (13.0.6)
+    unicorn (6.0.0)
+      kgio (~> 2.6)
+      raindrops (~> 0.7)
+
+PLATFORMS
+  arm64-darwin-20
+
+DEPENDENCIES
+  rake (>= 0.9.2)
+  unicorn-worker-killer!
+
+BUNDLED WITH
+   2.2.25

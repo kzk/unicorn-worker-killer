@@ -9,7 +9,6 @@ Gem::Specification.new do |gem|
   gem.version     = File.read("VERSION").strip
   gem.authors     = ["Kazuki Ohta", "Sadayuki Furuhashi", "Jonathan Clem"]
   gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com", "jonathan@jclem.net"]
-  gem.has_rdoc    = false
   #gem.platform    = Gem::Platform::RUBY
   gem.files       = `git ls-files`.split("\n")
   gem.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
