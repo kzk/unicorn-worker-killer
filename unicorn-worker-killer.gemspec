@@ -11,8 +11,6 @@ Gem::Specification.new do |gem|
   gem.email       = ["kazuki.ohta@gmail.com", "frsyuki@gmail.com", "jonathan@jclem.net"]
   #gem.platform    = Gem::Platform::RUBY
   gem.files       = `git ls-files`.split("\n")
-  gem.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
-  gem.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.licenses    = ["GPLv2+", "Ruby 1.8"]
   gem.require_paths = ['lib']
   gem.add_dependency "unicorn",         [">= 4", "< 7"]
