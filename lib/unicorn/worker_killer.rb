@@ -49,8 +49,8 @@ module Unicorn::WorkerKiller
       RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
-    def process_client(client)
-      super(client) # Unicorn::HttpServer#process_client
+    def process_client(*client)
+      super(*client) # Unicorn::HttpServer#process_client
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
 
       @_worker_process_start ||= Time.now
@@ -89,8 +89,8 @@ module Unicorn::WorkerKiller
       RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
-    def process_client(client)
-      super(client) # Unicorn::HttpServer#process_client
+    def process_client(*client)
+      super(*client) # Unicorn::HttpServer#process_client
       return if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0
 
       @_worker_process_start ||= Time.now
