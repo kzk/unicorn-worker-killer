@@ -5,6 +5,17 @@ require 'get_process_mem'
 module Unicorn::WorkerKiller
   class << self
     attr_accessor :configuration
+    attr_accessor :servers_extended
+  end
+
+  def self.randomize(integer)
+    RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
+  end
+
+  def self.extend_servers(&block)
+    return if @servers_extended
+    ObjectSpace.each_object(Unicorn::HttpServer, &block)
+    @servers_extended = true
   end
 
   # Kill the current process by telling it to send signals to itself. If
@@ -34,7 +45,7 @@ module Unicorn::WorkerKiller
     #
     # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
     def self.new(app, memory_limit_min = (1024**3), memory_limit_max = (2*(1024**3)), check_cycle = 16, verbose = false)
-      ObjectSpace.each_object(Unicorn::HttpServer) do |s|
+      Unicorn::WorkerKiller.extend_servers do |s|
         s.extend(self)
         s.instance_variable_set(:@_worker_memory_limit_min, memory_limit_min)
         s.instance_variable_set(:@_worker_memory_limit_max, memory_limit_max)
@@ -45,19 +56,17 @@ module Unicorn::WorkerKiller
       app # pretend to be Rack middleware since it was in the past
     end
 
-    def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
-    end
 
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_memory_limit ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
+      @_worker_memory_limit ||= @_worker_memory_limit_min + Unicorn::WorkerKiller.randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
       @_worker_check_count += 1
       if @_worker_check_count % @_worker_check_cycle == 0
-        rss = GetProcessMem.new.bytes
+        @_process_mem ||= GetProcessMem.new
+        rss = @_process_mem.bytes
         logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
         if rss > @_worker_memory_limit
           logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
@@ -75,7 +84,7 @@ module Unicorn::WorkerKiller
     #
     # @see https://github.com/defunkt/unicorn/blob/master/lib/unicorn/oob_gc.rb#L40
     def self.new(app, max_requests_min = 3072, max_requests_max = 4096, verbose = false)
-      ObjectSpace.each_object(Unicorn::HttpServer) do |s|
+      Unicorn::WorkerKiller.extend_servers do |s|
         s.extend(self)
         s.instance_variable_set(:@_worker_max_requests_min, max_requests_min)
         s.instance_variable_set(:@_worker_max_requests_max, max_requests_max)
@@ -85,16 +94,13 @@ module Unicorn::WorkerKiller
       app # pretend to be Rack middleware since it was in the past
     end
 
-    def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
-    end
 
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
       return if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_cur_requests ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
+      @_worker_cur_requests ||= @_worker_max_requests_min + Unicorn::WorkerKiller.randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
       @_worker_max_requests ||= @_worker_cur_requests
       logger.info "#{self}: worker (pid: #{Process.pid}) has #{@_worker_cur_requests} left before being killed" if @_verbose
 
