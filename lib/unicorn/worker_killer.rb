@@ -5,6 +5,16 @@ require 'get_process_mem'
 module Unicorn::WorkerKiller
   class << self
     attr_accessor :configuration
+    
+    # Memoized Ruby version check for performance
+    def modern_ruby?
+      @modern_ruby ||= RUBY_VERSION > "1.9"
+    end
+    
+    # Shared randomize method to avoid code duplication
+    def randomize(integer)
+      modern_ruby? ? Random.rand(integer.abs) : rand(integer)
+    end
   end
 
   # Kill the current process by telling it to send signals to itself. If
@@ -46,7 +56,7 @@ module Unicorn::WorkerKiller
     end
 
     def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
+      Unicorn::WorkerKiller.randomize(integer)
     end
 
     def process_client(client)
@@ -86,7 +96,7 @@ module Unicorn::WorkerKiller
     end
 
     def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
+      Unicorn::WorkerKiller.randomize(integer)
     end
 
     def process_client(client)
