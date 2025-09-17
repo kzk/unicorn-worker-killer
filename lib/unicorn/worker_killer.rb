@@ -7,6 +7,11 @@ module Unicorn::WorkerKiller
     attr_accessor :configuration
   end
 
+  # Shared randomize method to avoid duplication between modules
+  def self.randomize(integer)
+    RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
+  end
+
   # Kill the current process by telling it to send signals to itself. If
   # the process isn't killed after `configuration.max_quit` QUIT signals,
   # send TERM signals until `configuration.max_term`. Finally, send a KILL
@@ -41,12 +46,9 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_worker_check_cycle, check_cycle)
         s.instance_variable_set(:@_worker_check_count, 0)
         s.instance_variable_set(:@_verbose, verbose)
+        s.instance_variable_set(:@_process_mem, GetProcessMem.new)
       end
       app # pretend to be Rack middleware since it was in the past
-    end
-
-    def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
     def process_client(client)
@@ -54,13 +56,15 @@ module Unicorn::WorkerKiller
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_memory_limit ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
+      @_worker_memory_limit ||= @_worker_memory_limit_min + Unicorn::WorkerKiller.randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
       @_worker_check_count += 1
-      if @_worker_check_count % @_worker_check_cycle == 0
-        rss = GetProcessMem.new.bytes
+      check_cycle = @_worker_check_cycle
+      if @_worker_check_count % check_cycle == 0
+        rss = @_process_mem.bytes
         logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
-        if rss > @_worker_memory_limit
-          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
+        memory_limit = @_worker_memory_limit
+        if rss > memory_limit
+          logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{memory_limit} bytes)"
           Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
         end
         @_worker_check_count = 0
@@ -85,16 +89,12 @@ module Unicorn::WorkerKiller
       app # pretend to be Rack middleware since it was in the past
     end
 
-    def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
-    end
-
     def process_client(client)
       super(client) # Unicorn::HttpServer#process_client
       return if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_cur_requests ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
+      @_worker_cur_requests ||= @_worker_max_requests_min + Unicorn::WorkerKiller.randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
       @_worker_max_requests ||= @_worker_cur_requests
       logger.info "#{self}: worker (pid: #{Process.pid}) has #{@_worker_cur_requests} left before being killed" if @_verbose
 
