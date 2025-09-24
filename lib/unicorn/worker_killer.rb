@@ -7,27 +7,34 @@ module Unicorn::WorkerKiller
     attr_accessor :configuration
   end
 
+  module Utils
+    def randomize(integer)
+      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
+    end
+  end
+
   # Kill the current process by telling it to send signals to itself. If
   # the process isn't killed after `configuration.max_quit` QUIT signals,
   # send TERM signals until `configuration.max_term`. Finally, send a KILL
   # signal. A single signal is sent per request.
   # @see http://unicorn.bogomips.org/SIGNALS.html
-  def self.kill_self(logger, start_time)
+  def self.kill_self(logger, start_time, kill_attempts_tracker)
     alive_sec = (Time.now - start_time).round
     worker_pid = Process.pid
 
-    @@kill_attempts ||= 0
-    @@kill_attempts += 1
+    kill_attempts_tracker[:count] += 1
 
     sig = :QUIT
-    sig = :TERM if @@kill_attempts > configuration.max_quit
-    sig = :KILL if @@kill_attempts > configuration.max_term
+    sig = :TERM if kill_attempts_tracker[:count] > configuration.max_quit
+    sig = :KILL if kill_attempts_tracker[:count] > configuration.max_term
 
-    logger.warn "#{self} send SIG#{sig} (pid: #{worker_pid}) alive: #{alive_sec} sec (trial #{@@kill_attempts})"
+    logger.warn "#{self} send SIG#{sig} (pid: #{worker_pid}) alive: #{alive_sec} sec (trial #{kill_attempts_tracker[:count]})"
     Process.kill sig, worker_pid
   end
 
   module Oom
+    include Utils
+
     # Killing the process must be occurred at the outside of the request. We're
     # using similar techniques used by OobGC, to ensure actual killing doesn't
     # affect the request.
@@ -41,12 +48,17 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_worker_check_cycle, check_cycle)
         s.instance_variable_set(:@_worker_check_count, 0)
         s.instance_variable_set(:@_verbose, verbose)
+        
+        # Pre-calculate memory limit and cache GetProcessMem instance
+        if memory_limit_min > 0 || memory_limit_max > 0
+          limit_range = memory_limit_max - memory_limit_min + 1
+          calculated_limit = memory_limit_min + (RUBY_VERSION > "1.9" ? Random.rand(limit_range.abs) : rand(limit_range))
+          s.instance_variable_set(:@_worker_memory_limit, calculated_limit)
+          s.instance_variable_set(:@_process_mem, GetProcessMem.new)
+        end
+        s.instance_variable_set(:@_kill_attempts, { count: 0 })
       end
       app # pretend to be Rack middleware since it was in the past
-    end
-
-    def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
     def process_client(client)
@@ -54,14 +66,13 @@ module Unicorn::WorkerKiller
       return if @_worker_memory_limit_min == 0 && @_worker_memory_limit_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_memory_limit ||= @_worker_memory_limit_min + randomize(@_worker_memory_limit_max - @_worker_memory_limit_min + 1)
       @_worker_check_count += 1
       if @_worker_check_count % @_worker_check_cycle == 0
-        rss = GetProcessMem.new.bytes
+        rss = @_process_mem.bytes
         logger.info "#{self}: worker (pid: #{Process.pid}) using #{rss} bytes." if @_verbose
         if rss > @_worker_memory_limit
           logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds memory limit (#{rss} bytes > #{@_worker_memory_limit} bytes)"
-          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
+          Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start, @_kill_attempts)
         end
         @_worker_check_count = 0
       end
@@ -69,6 +80,8 @@ module Unicorn::WorkerKiller
   end
 
   module MaxRequests
+    include Utils
+
     # Killing the process must be occurred at the outside of the request. We're
     # using similar techniques used by OobGC, to ensure actual killing doesn't
     # affect the request.
@@ -80,13 +93,18 @@ module Unicorn::WorkerKiller
         s.instance_variable_set(:@_worker_max_requests_min, max_requests_min)
         s.instance_variable_set(:@_worker_max_requests_max, max_requests_max)
         s.instance_variable_set(:@_verbose, verbose)
+        
+        # Pre-calculate request limit
+        if max_requests_min > 0 || max_requests_max > 0
+          request_range = max_requests_max - max_requests_min + 1
+          calculated_limit = max_requests_min + (RUBY_VERSION > "1.9" ? Random.rand(request_range.abs) : rand(request_range))
+          s.instance_variable_set(:@_worker_max_requests, calculated_limit)
+          s.instance_variable_set(:@_worker_cur_requests, calculated_limit)
+        end
+        s.instance_variable_set(:@_kill_attempts, { count: 0 })
       end
 
       app # pretend to be Rack middleware since it was in the past
-    end
-
-    def randomize(integer)
-      RUBY_VERSION > "1.9" ? Random.rand(integer.abs) : rand(integer)
     end
 
     def process_client(client)
@@ -94,13 +112,11 @@ module Unicorn::WorkerKiller
       return if @_worker_max_requests_min == 0 && @_worker_max_requests_max == 0
 
       @_worker_process_start ||= Time.now
-      @_worker_cur_requests ||= @_worker_max_requests_min + randomize(@_worker_max_requests_max - @_worker_max_requests_min + 1)
-      @_worker_max_requests ||= @_worker_cur_requests
       logger.info "#{self}: worker (pid: #{Process.pid}) has #{@_worker_cur_requests} left before being killed" if @_verbose
 
       if (@_worker_cur_requests -= 1) <= 0
         logger.warn "#{self}: worker (pid: #{Process.pid}) exceeds max number of requests (limit: #{@_worker_max_requests})"
-        Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start)
+        Unicorn::WorkerKiller.kill_self(logger, @_worker_process_start, @_kill_attempts)
       end
     end
   end
